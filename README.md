@@ -13,12 +13,12 @@ Streaming tar processor for embedded systems
 - Handles USTAR-formatted tar headers
 - Safe octal parsing for file sizes
 - Only core features supported:
-  - Filenames
-  - File size
+  - filename
+  - size
 
 _Notes_
 
-- The parser assumes extremely low memory environments; no 512-byte header buffer is used for streaming.
+- The parser assumes extremely low memory environments, less than 200 bytes of RAM needed
 - The parser expects USTAR headers. Malformed headers may be ignored or cause early termination.
 - Always zero out struct zerotar_s before use to ensure proper operation.
 
