@@ -11,10 +11,10 @@ Streaming tar processor for embedded systems
 - Very low memory footprint
 - Supports optional path flattening (`ZEROTAR_FLAGS_FLATTEN`)
 - Handles USTAR-formatted tar headers
-- Safe octal parsing for file sizes
 - Only core features supported:
   - filename
   - size
+- All other fields are skipped (no permissions, owners, etc)
 
 _Notes_
 
