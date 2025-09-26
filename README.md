@@ -57,27 +57,25 @@ _Note:_ Callbacks can be NULL in case we don't need some or all of them.
 
 ```f_open(void *userdata, const char *name, int size)```
 
-  Called when a new file starts. name is the file path (flattened if ZEROTAR_FLAGS_FLATTEN is set). size is the expected file size in bytes.
+&nbsp;&nbsp;&nbsp;Called when a new file starts. name is the file path (flattened if ZEROTAR_FLAGS_FLATTEN is set). size is the expected file size in bytes.
 
 ```f_write(void *userdata, uint8_t *buf, int len)```
 
-  Called with chunks of file data. The parser may deliver data in arbitrary chunk sizes.
+&nbsp;&nbsp;&nbsp;Called with chunks of file data. The parser may deliver data in arbitrary chunk sizes.
 
 ```f_close(void *userdata)```
 
-  Called when a file finishes.
+&nbsp;&nbsp;&nbsp;Called when a file finishes.
 
 ### API
 
 ```void zerotar(struct zerotar_s *zt, uint8_t *buf, int len);```
 
-zt – pointer to the parser state
+&nbsp;&nbsp;&nbsp;zt – pointer to the parser state
 
-buf – buffer containing part of the TAR archive
+&nbsp;&nbsp;&nbsp;buf – buffer containing part of the TAR archive
 
-len – number of bytes in the buffer
+&nbsp;&nbsp;&nbsp;len – number of bytes in the buffer *(if len < 0, the parser is reset and internal state cleared)*
 
-If len < 0, the parser is reset and internal state cleared.
-
-Call zerotar() repeatedly as new data arrives.
+Call ```zerotar()``` repeatedly as new data arrives.
 
