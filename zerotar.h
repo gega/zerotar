@@ -19,7 +19,10 @@
 
 #define ZEROTAR_FLAGS_FLATTEN (1<<6)
 #define ZEROTAR_FLAGS_MAGIC_MASK (0x7)
+#define ZEROTAR_FLAGS_EOF (1<<7)
 
+#define ZEROTAR_ERR_INVALID_ARG (-1)
+#define ZEROTAR_ERR_MAGIC (-2)
 
 struct zerotar_s
 {
@@ -35,7 +38,7 @@ struct zerotar_s
   int (*f_close)(void *);
 };
 
-static void zerotar(struct zerotar_s *zt, uint8_t *buf, int len);
+static int zerotar(struct zerotar_s *zt, uint8_t *buf, int len);
 
 
 #ifdef ZEROTAR_IMPLEMENTATION
@@ -59,19 +62,19 @@ static inline int64_t zerotar_parse_octal(const char *oct)
 }
 
 
-void zerotar(struct zerotar_s *zt, uint8_t *buf, int len)
+int zerotar(struct zerotar_s *zt, uint8_t *buf, int len)
 {
   static const char magic[]="ustar";
   int fill=0,n=0;
   
-  if(NULL==zt) return;
+  if(NULL==zt) return(ZEROTAR_ERR_INVALID_ARG);
   if(len<0)
   {
     zt->skip=0;
     zt->hdr_pnt=0;
     zt->size=0;
     zt->mode=0;
-    return;
+    return(0);
   }
   while(len>0)
   {
@@ -82,6 +85,7 @@ void zerotar(struct zerotar_s *zt, uint8_t *buf, int len)
         memcpy(&zt->hdr_raw[zt->hdr_pnt],buf,fill);
         zt->hdr_pnt+=fill;
         len-=fill;
+        buf+=fill;
         if(zt->hdr_pnt>=sizeof(zt->hdr_raw))
         {
           const char *name=(const char *)zt->hdr_raw;
@@ -97,6 +101,7 @@ void zerotar(struct zerotar_s *zt, uint8_t *buf, int len)
             zt->size=zerotar_parse_octal((const char *)&zt->hdr_raw[ZEROTAR_SIZE_OFFSET]);
             if(NULL!=zt->f_open) zt->f_open(zt->userdata, name, zt->size);
           }
+          else zt->flags|=ZEROTAR_FLAGS_EOF;
           zt->skip=ZEROTAR_TAIL_HDR_CHUNK;
           zt->hdr_pnt=0;
           zt->mode=1;
@@ -111,7 +116,7 @@ void zerotar(struct zerotar_s *zt, uint8_t *buf, int len)
           if(0!=memcmp(buf,&magic[sizeof(magic)-1-l],l))
           {
             zt->skip=zt->mode=0;
-            break;
+            return(ZEROTAR_ERR_MAGIC);
           }
           zt->flags&=~ZEROTAR_FLAGS_MAGIC_MASK;
         }
@@ -119,8 +124,8 @@ void zerotar(struct zerotar_s *zt, uint8_t *buf, int len)
         len-=n;
         buf+=n;
         fill+=n;
-        if(zt->skip<ZEROTAR_MAGIC_BACKOFFSET&&n>sizeof(magic))
-        { 
+        if(0==(zt->flags&ZEROTAR_FLAGS_EOF)&&zt->skip<ZEROTAR_MAGIC_BACKOFFSET&&n>(sizeof(magic)/2))
+        {
           int offs=ZEROTAR_MAGIC_TAIL_OFFS-(ZEROTAR_TAIL_HDR_CHUNK-zt->skip-n);
           if(offs>0&&offs<n)
           {
@@ -128,7 +133,7 @@ void zerotar(struct zerotar_s *zt, uint8_t *buf, int len)
             if(0!=memcmp(buf-n+offs, magic, l))
             {
               zt->skip=zt->mode=0;
-              break;
+              return(ZEROTAR_ERR_MAGIC);
             }
             if(l<sizeof(magic)-1) zt->flags+=sizeof(magic)-1-l;
           }
@@ -167,6 +172,7 @@ void zerotar(struct zerotar_s *zt, uint8_t *buf, int len)
         break;
     }
   }
+  return(0);
 }
 
 #endif
