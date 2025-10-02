@@ -153,7 +153,7 @@ int zerotar(struct zerotar_s *zt, uint8_t *buf, int len)
         fill+=n;
         if(zt->size<=0)
         {
-          if((zt->flags&ZEROTAR_FLAGS_EOF)&&NULL!=zt->f_close) zt->f_close(zt->userdata);
+          if(!(zt->flags&ZEROTAR_FLAGS_EOF)&&NULL!=zt->f_close) zt->f_close(zt->userdata);
           zt->mode=3;
           zt->size=0;
         }
