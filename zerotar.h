@@ -68,6 +68,7 @@ int zerotar(struct zerotar_s *zt, uint8_t *buf, int len)
   int fill=0,n=0;
   
   if(NULL==zt) return(ZEROTAR_ERR_INVALID_ARG);
+  if(zt->flags&ZEROTAR_FLAGS_EOF) return(0);
   if(len<0)
   {
     zt->skip=0;
@@ -101,7 +102,11 @@ int zerotar(struct zerotar_s *zt, uint8_t *buf, int len)
             zt->size=zerotar_parse_octal((const char *)&zt->hdr_raw[ZEROTAR_SIZE_OFFSET]);
             if(NULL!=zt->f_open) zt->f_open(zt->userdata, name, zt->size);
           }
-          else zt->flags|=ZEROTAR_FLAGS_EOF;
+          else
+          {
+            zt->flags|=ZEROTAR_FLAGS_EOF;
+            return(0);
+          }
           zt->skip=ZEROTAR_TAIL_HDR_CHUNK;
           zt->hdr_pnt=0;
           zt->mode=1;
